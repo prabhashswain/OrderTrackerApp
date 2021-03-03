@@ -17,6 +17,20 @@ class PizzaConsumer(WebsocketConsumer):
             'payload':data
         }))
 
+    def receive(self,text_data):
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name,{
+                'type':'order_status',
+                'payload':text_data
+            }
+        )
+
+    def order_status(self,event):
+        data = json.loads(event['value'])
+        self.send(text_data=json.dumps({
+            'payload':data
+        }))
+
     def disconnect(self,close_code):
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,

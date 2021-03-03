@@ -2,6 +2,11 @@ from django.db import models
 import string
 import random
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+import json
 
 class Pizza(models.Model):
     name = models.CharField(max_length=100)
@@ -30,8 +35,6 @@ class Order(models.Model):
     status = models.CharField(max_length=20,choices=CHOICES,default='order received')
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.order_id
 
     def save(self,*args,**kwargs):
         if not self.order_id:
@@ -42,7 +45,6 @@ class Order(models.Model):
     def get_order_details(order_id):
         instance = Order.objects.filter(order_id=order_id).first()
         data = {}
-        print(instance.status)
         progress = 0
         data['status'] = instance.status
         if instance.status == "order received":
@@ -57,3 +59,31 @@ class Order(models.Model):
             progress = 100
         data['progress'] = progress
         return data
+
+@receiver(post_save,sender=Order)
+def order_status_update(sender,instance,created,**kwargs):
+    if not created:
+        channel_layer = get_channel_layer()
+        data = {}
+        progress = 0
+        data['status'] = instance.status
+        if instance.status == "order received":
+            progress = 20
+        elif instance.status == "Baking":
+            progress = 40
+        elif instance.status == "Baked":
+            progress = 60
+        elif instance.status == "Out for delivery":
+            progress = 80
+        elif instance.status == "order Received":
+            progress = 100
+        data['progress'] = progress
+
+        async_to_sync(channel_layer.group_send)(
+            'order_%s' %instance.order_id,{
+                'type':'order_status',
+                'value':json.dumps(data)
+            }
+        )
+
+        
