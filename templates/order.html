@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Order{% endblock %}
+
+{% block body %}
+<div class="container mt-5 pt-5">
+    <h3>Order id - {{order.order_id}} </h3>
+    <p>{{order.pizza.name}}</p>
+    <p>Amount - ₹ {{order.amount}}</p>
+    <span class="badge badge-danger" id="status">{{order.status}}</span>
+  <div class="progress mt-4">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="50"
+      aria-valuemin="0" aria-valuemax="100" style="width: 20%"></div>
+  </div>
+  </div>
+
+  <script>
+    let order_id = "{{order.order_id}}"
+    const socket = new WebSocket("ws://127.0.0.1:8000/ws/pizza/"+order_id);
+    const progressBarStatus = (status,progress)=>{
+      let status_html = document.querySelector('#status');
+      let progressbar_status = document.querySelector('.progress-bar');
+      progressbar_status.style.width = progress + '%'
+      status_html.innerHTML = status;
+      if (progress == 100) {
+        status_html.classList.add('bg-success');
+        progressbar_status.classList.add('bg-success');
+      } else {
+        status_html.ClassList.remove('bg-success');
+        progressbar_status.classList.remove('bg-success');
+      }
+    }
+    socket.onmessage = e=>{
+      let data = JSON.parse(e.data);
+      progressBarStatus(data.payload.status,data.payload.progress)
+    }
+    socket.onclose = e=>{
+      console.log("close");
+    }
+    </script>
+{% endblock %}

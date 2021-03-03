@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+
+{% block script %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.0/axios.min.js" integrity="sha512-DZqqY3PiOvTP9HkjIWgjO6ouCbq+dxqWoJZ/Q+zPYNHmlnI2dQnbJ5bxAHpAMw+LXRm4D72EIRXzvcHQtE8/VQ==" crossorigin="anonymous"></script>
+  <script src="/static/js/main.js"></script>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="row pt-3 mt-5 pt-sm-0">
+        {% for pizza in pizza %}
+        <div class="col-lg-3  col-md-4 col-sm-6  mb-grid-gutter ">
+            <div class="card product-card shadow border pb-2"><a class="d-block" href="#quick-view" data-toggle="modal"><img
+                        class="card-img-top" src="{{pizza.image.url}}" alt="Pizza"></a>
+                <div class="card-body pt-1 pb-2">
+                    <h3 class="product-title font-size-md">{{pizza.name}}</h3>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="product-price"><span class="text-accent"> ₹ {{pizza.price}}</span></div>
+                        <button class="btn btn-primary btn-sm" onclick="createOrder({{pizza.id}})" type="button" data-toggle="toast"
+                            data-target="#cart-toast">+<i class="czi-cart font-size-base ml-1"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div>
+        <div>
+            <h3 class="text-center mb-4 mt-4">All Orders</h3>
+            <div class="table-responsive font-size-md">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date Purchased</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td class="py-3">{{order.order_id}}</td>
+                            <td class="py-3">{{order.created_at}}</td>
+                            <td class="py-3"><span class="badge badge-info m-0">{{order.status}}</span></td>
+                            <td class="py-3">&#8377; {{order.amount}}</td>
+                            <td class="py-3">
+                                <a href="{% url 'order' order.order_id %}" class="btn btn-danger btn-sm">View</a>
+                            </td>
+                        </tr>
+                        {%  endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
